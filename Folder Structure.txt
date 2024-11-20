@@ -1,0 +1,22 @@
+my-todo-app/
+├── client/
+│   ├── public/
+│   │   ├── index.html
+│   │   └── Assets/
+│   │       └── Icons/
+│   │           ├── List-icon.svg
+│   │           ├── Logo.svg
+│   │           ├── Edit-icon.svg
+│   │           └── Delete-icon.svg
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   ├── App.css
+│   │   └── index.css
+│   ├── package.json
+│   └── .gitignore
+├── server/
+│   ├── server.js
+│   ├── package.json
+│   └── .gitignore
+└── .gitignore

@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from 'react';
+import './App.css';
+
+const App = () => {
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState({ t_event: '', dueDate: '' });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const fetchTodos = async () => {
+    const response = await fetch('http://localhost:3001/api/todos');
+    const todos = await response.json();
+    setTodos(todos);
+    setIsLoading(false);
+  };
+
+  const addTodo = async () => {
+    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    await fetch('http://localhost:3001/api/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ...newTodo, color: randomColor })
+    });
+    setNewTodo({ t_event: '', dueDate: '' });
+    fetchTodos();
+  };
+
+  const deleteTodo = async (id) => {
+    await fetch(`http://localhost:3001/api/todos/${id}`, {
+      method: 'DELETE'
+    });
+    fetchTodos();
+  };
+
+  const saveEditTodo = async (id, t_event, dueDate) => {
+    await fetch(`http://localhost:3001/api/todos/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ t_event, dueDate })
+    });
+    fetchTodos();
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewTodo(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  return (
+    <div className="App">
+      <nav className="navbar">
+        <div className="heading-info">
+          <img src="./Assets/Icons/Logo.svg" alt="" />
+        </div>
+        <div className="todo-list-head">To-Do-List</div>
+      </nav>
+
+      <div className="todo-section">
+        <div className="todo-input-section">
+          <div className="todo-text-section">
+            <div className="form-control">
+              <input
+                className="input input-alt input-text"
+                placeholder="Event"
+                type="text"
+                name="t_event"
+                value={newTodo.t_event}
+                onChange={handleInputChange}
+              />
+              <span className="input-border input-border-alt"></span>
+            </div>
+          </div>
+          <div className="todo-date-section">
+            <div className="form-control">
+              <input
+                className="input-date input-alt"
+                type="date"
+                name="dueDate"
+                value={newTodo.dueDate}
+                onChange={handleInputChange}
+              />
+              <span className="input-border input-border-alt"></span>
+            </div>
+          </div>
+          <div className="add-button-section">
+            <button className="add-button" onClick={addTodo} disabled={!newTodo.t_event.trim()}>
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="todo-message-section">
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : (
+          todos.map(todo => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              deleteTodo={deleteTodo}
+              saveEditTodo={saveEditTodo}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+const TodoItem = ({ todo, deleteTodo, saveEditTodo }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTodo, setEditedTodo] = useState({ t_event: todo.t_event, dueDate: todo.dueDate });
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditedTodo(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleSave = () => {
+    saveEditTodo(todo.id, editedTodo.t_event, editedTodo.dueDate);
+    setIsEditing(false);
+  };
+
+  const handleColorChange = () => {
+    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    const updatedTodo = { ...todo, color: randomColor };
+    saveEditTodo(todo.id, updatedTodo.t_event, updatedTodo.dueDate);
+  };
+
+  return (
+    <div className="todo-list-message" style={{ backgroundColor: todo.color }} data-id={todo.id}>
+      <div className="todo-info-grid">
+        <div className="todo-date-grid">
+          <div className="todo-date-info">
+            <input
+              disabled={!isEditing}
+              type="date"
+              value={editedTodo.dueDate}
+              className="todo-date-input date-edit"
+              name="dueDate"
+              onChange={handleEditChange}
+            />
+          </div>
+        </div>
+        <div className="button-grid">
+          {isEditing ? (
+            <button className="save-button" onClick={handleSave}>
+              Save
+            </button>
+          ) : (
+            <button className="edit-button" onClick={() => setIsEditing(true)}>
+              <img className="edit-image" src="./Assets/Icons/Edit-icon.svg" alt="Edit" />
+            </button>
+          )}
+          <button className="delete-button" onClick={() => deleteTodo(todo.id)}>
+            <img className="delete-image" src="./Assets/Icons/Delete-icon.svg" alt="Delete" />
+          </button>
+        </div>
+      </div>
+      <div className="todo-message">
+        <textarea
+          disabled={!isEditing}
+          className="todo-inner-message"
+          style={{ backgroundColor: todo.color }}
+          value={editedTodo.t_event}
+          name="t_event"
+          onChange={handleEditChange}
+        />
+      </div>
+      <button className="color-picker" onClick={handleColorChange}>color picker</button>
+    </div>
+  );
+};
+
+export default App;
